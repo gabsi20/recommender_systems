@@ -56,5 +56,3 @@ print random_user_recommender(100)
 print random_artist_recommender(100)
 print popularity_recommender()
 print collaborative_filtering_recommender(100,3)
-
-
