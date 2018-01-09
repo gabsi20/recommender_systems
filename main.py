@@ -1,6 +1,7 @@
 import numpy as np
 import random
 import file
+from sets import Set
 
 UAM_FILE = "data/C1ku_UAM.txt"                    
 ARTISTS_FILE = "data/C1ku_idx_artists.txt"       
@@ -15,29 +16,31 @@ MAX_RECOMMENDATIONS = 10
 
 def random_artist_recommender(user):
     user_playcounts = UAM[user, :]
-    recommendation_pool = np.where(user_playcounts == 0)[0]
+    recommendation_pool = np.nonzero(user_playcounts == 0)[0]
     return random.sample(recommendation_pool, MAX_RECOMMENDATIONS)
 
 def random_user_recommender(user):
-    artist_pool = []
-    random_users = random.sample(USERS,10)
-    for idx, user_id in enumerate(random_users):
-        user_playcounts =  UAM[int(USERS.index(user_id)),:]
-        for idx, count in enumerate(user_playcounts):
-            if count > 0:
-                artist_pool.append(idx)
+    random_users = random.sample(range(0, UAM.shape[0]), 10)
+    users_playcounts = UAM[random_users, :]
 
-    recommendation_pool = []
-    user_playcounts =  UAM[user,:]
-    for idx, artist in enumerate(artist_pool):
-        if user_playcounts[artist] == 0:
-            recommendation_pool.append(artist)
-    return random.sample(recommendation_pool,10)
+    artist_pool = get_nonzero_artists_from_users(users_playcounts)
+    my_user_counts = UAM[user, :]
+
+    recommendation_pool = np.where(my_user_counts[artist_pool] == 0)[0]
+    return random.sample(recommendation_pool, 10)
 
 def popularity_recommender():
     sums = np.sum(UAM, axis=0)
     top_ranked_indizes = np.argsort(sums)[-MAX_RECOMMENDATIONS:]
-    return np.flip(top_ranked_indizes, axis=0)
+    return top_ranked_indizes
+
+
+def get_nonzero_artists_from_users(users_playcounts):
+    artist_pool = []
+    for user_playcount in users_playcounts:
+        artist_pool.extend(np.nonzero(user_playcount)[0])
+    return np.unique(artist_pool)
+
 
 print random_user_recommender(100)
 print random_artist_recommender(100)
