@@ -101,3 +101,7 @@ ENV/
 
 # mypy
 .mypy_cache/
+
+wikipedia_pages/
+
+.DS_Store

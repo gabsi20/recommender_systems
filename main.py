@@ -1,6 +1,7 @@
 import numpy as np
 import random
 import file
+import fetch
 from sets import Set
 
 UAM_FILE = "data/C1ku_UAM.txt"
@@ -20,14 +21,14 @@ def random_artist_recommender(user):
     return random.sample(recommendation_pool, MAX_RECOMMENDATIONS)
 
 def random_user_recommender(user):
-    random_users = random.sample(range(0, UAM.shape[0]), 10)
+    random_users = random.sample(range(0, UAM.shape[0]), MAX_RECOMMENDATIONS)
     users_playcounts = UAM[random_users, :]
 
     artist_pool = get_nonzero_artists_from_users(users_playcounts)
     my_user_counts = UAM[user, :]
 
     recommendation_pool = np.where(my_user_counts[artist_pool] == 0)[0]
-    return random.sample(recommendation_pool, 10)
+    return random.sample(recommendation_pool, MAX_RECOMMENDATIONS)
 
 def popularity_recommender():
     sums = np.sum(UAM, axis=0)
@@ -50,11 +51,17 @@ def collaborative_filtering_recommender(user, K):
     artist_idx_u = np.nonzero(UAM[user,:])                 # indices of artists user u listened to
     artist_idx_n = np.nonzero(UAM[neighbor_idx,:])      # indices of artists user u's neighbor listened to
     recommended_artists_idx = np.setdiff1d(artist_idx_n[0], artist_idx_u[0])      # get difference indices between user listened and neighbour listened
-    return random.sample(recommended_artists_idx,10)
+    return random.sample(recommended_artists_idx, MAX_RECOMMENDATIONS)
+
+def content_based_recommender():
+    fetch.get_artists_context(refetch=True)
+    return 'content based recommender not implemented'
+
 
 print random_user_recommender(100)
 print random_artist_recommender(100)
 print popularity_recommender()
-print collaborative_filtering_recommender(100,3)
+print collaborative_filtering_recommender(100, 3)
+print content_based_recommender()
 
 
