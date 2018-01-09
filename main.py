@@ -2,10 +2,10 @@ import numpy as np
 import random
 import file
 
-UAM_FILE = "data/C1ku_UAM.txt"                    
-ARTISTS_FILE = "data/C1ku_idx_artists.txt"       
-USERS_FILE = "data/C1ku_idx_users.txt"   
-ARTISTS_EXTENDED = "data/C1ku_artists_extended.csv"  
+UAM_FILE = "data/C1ku_UAM.txt"
+ARTISTS_FILE = "data/C1ku_idx_artists.txt"
+USERS_FILE = "data/C1ku_idx_users.txt"
+ARTISTS_EXTENDED = "data/C1ku_artists_extended.csv"
 ARTISTS = file.read_from_file(ARTISTS_FILE)
 USERS = file.read_from_file(USERS_FILE)
 UAM = np.loadtxt(UAM_FILE, delimiter='\t', dtype=np.float32)
@@ -39,6 +39,19 @@ def popularity_recommender():
     top_ranked_indizes = np.argsort(sums)[-MAX_RECOMMENDATIONS:]
     return np.flip(top_ranked_indizes, axis=0)
 
+def collaborative_filtering_recommender(user, K):
+    pc_vec = UAM[user,:]
+    sim_users = np.inner(pc_vec, UAM)     # similarities between u and other users
+    sort_idx = np.argsort(sim_users)        # sort in ascending order
+    neighbor_idx = sort_idx[-2:-1][0]       # index of the closest neighbour ... last is user himself
+    artist_idx_u = np.nonzero(UAM[user,:])                 # indices of artists user u listened to
+    artist_idx_n = np.nonzero(UAM[neighbor_idx,:])      # indices of artists user u's neighbor listened to
+    recommended_artists_idx = np.setdiff1d(artist_idx_n[0], artist_idx_u[0])      # get difference indices between user listened and neighbour listened
+    return random.sample(recommended_artists_idx,10)
+
 print random_user_recommender(100)
 print random_artist_recommender(100)
 print popularity_recommender()
+print collaborative_filtering_recommender(100,3)
+
+
