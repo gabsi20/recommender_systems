@@ -45,13 +45,20 @@ def get_nonzero_artists_from_users(users_playcounts):
 
 def collaborative_filtering_recommender(user, K):
     pc_vec = UAM[user,:]
-    sim_users = np.inner(pc_vec, UAM)     # similarities between u and other users
-    sort_idx = np.argsort(sim_users)        # sort in ascending order
-    neighbor_idx = sort_idx[-2:-1][0]       # index of the closest neighbour ... last is user himself
-    artist_idx_u = np.nonzero(UAM[user,:])                 # indices of artists user u listened to
-    artist_idx_n = np.nonzero(UAM[neighbor_idx,:])      # indices of artists user u's neighbor listened to
-    recommended_artists_idx = np.setdiff1d(artist_idx_n[0], artist_idx_u[0])      # get difference indices between user listened and neighbour listened
-    return random.sample(recommended_artists_idx, MAX_RECOMMENDATIONS)
+    sim_users = np.inner(pc_vec, UAM)     
+    sort_idx = np.argsort(sim_users)      
+    neighbours_idx = sort_idx[-1-K:-1]
+    counter = {}
+    for idx, neighbour in enumerate(neighbours_idx):
+        artist_idx_u = np.nonzero(UAM[user,:])                 
+        artist_idx_n = np.nonzero(UAM[neighbour,:])      
+        recommended_artists_idx = np.setdiff1d(artist_idx_n[0], artist_idx_u[0])
+        for artist_idx in recommended_artists_idx:
+            if artist_idx in counter:
+                counter[artist_idx] += UAM[neighbour, artist_idx] * (len(neighbours_idx) - idx)
+            else:
+                counter[artist_idx] = UAM[neighbour, artist_idx] * (len(neighbours_idx) - idx)
+    return sorted(counter, key=counter.get, reverse=True)[0:9]
 
 def content_based_recommender():
     fetch.get_artists_context(refetch=True)
