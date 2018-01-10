@@ -1,6 +1,7 @@
 import numpy as np
 import random
 import file
+import train
 import fetch
 from sets import Set
 
@@ -55,6 +56,7 @@ def collaborative_filtering_recommender(user, K):
 
 def content_based_recommender():
     fetch.get_artists_context(refetch=True)
+    train.train_content_based_recommender()
     return 'content based recommender not implemented'
 
 

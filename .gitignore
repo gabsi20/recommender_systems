@@ -105,3 +105,6 @@ ENV/
 wikipedia_pages/
 
 .DS_Store 
+AAM.txt
+tfidfs.txt
+terms.txt
