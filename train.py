@@ -7,9 +7,9 @@ import fetch
 import progress
 
 DATA_DIRECTORY = "./data/"
-OUTPUT_TFIDF_FILE = "tfidfs.txt"  # file to store term weights
-OUTPUT_TERMS_FILE = "terms.txt"   # file to store list of terms (for easy interpretation of term weights)
-OUTPUT_SIMS_FILE = "AAM.txt"      # file to store similarities between items
+OUTPUT_TFIDF_FILE = "tfidfs.txt"  # term frequency inverse document frequency
+OUTPUT_TERMS_FILE = "terms.txt"   # term list
+OUTPUT_SIMS_FILE = "AAM.txt"      # artist artist matrix
 
 STOP_WORDS = ["a", "about", "above", "after", "again", "against", "all", "am", "an", "and", "any", "are", "aren't", "as", "at", "be", "because", "been", "before", "being", "below", "between", "both", "but", "by", "can't", "cannot", "could", "couldn't", "did", "didn't", "do", "does", "doesn't", "doing", "don't", "down", "during", "each", "few", "for", "from", "further", "had", "hadn't", "has", "hasn't", "have", "haven't", "having", "he", "he'd", "he'll", "he's", "her", "here", "here's", "hers", "herself", "him", "himself", "his", "how", "how's", "i", "i'd", "i'll", "i'm", "i've", "if", "in", "into", "is", "isn't", "it", "it's", "its", "itself", "let's", "me", "more", "most", "mustn't", "my", "myself", "no", "nor", "not", "of", "off", "on", "once", "only", "or", "other", "ought", "our", "ours", "ourselves", "out", "over", "own", "same", "shan't", "she", "she'd", "she'll", "she's", "should", "shouldn't", "so", "some", "such", "than", "that", "that's", "the", "their", "theirs", "them", "themselves", "then", "there", "there's", "these", "they", "they'd", "they'll", "they're", "they've", "this", "those", "through", "to", "too", "under", "until", "up", "very", "was", "wasn't", "we", "we'd", "we'll", "we're", "we've", "were", "weren't", "what", "what's", "when", "when's", "where", "where's", "which", "while", "who", "who's", "whom", "why", "why's", "with", "won't", "would", "wouldn't", "you", "you'd", "you'll", "you're", "you've", "your", "yours", "yourself", "yourselves"]
 
@@ -111,27 +111,32 @@ def __dictionary_to_list(dictionary):
 
 def __write_terms_file(term_list):
     print "Saving term list to " + OUTPUT_TERMS_FILE
-    with open(DATA_DIRECTORY + O./UTPUT_TERMS_FILE, 'w') as f:
+    with open(DATA_DIRECTORY + OUTPUT_TERMS_FILE, 'w') as f:
         for t in term_list:
           f.write(t + "\n")
-ef __write_tfidf_file(tfidf):   print "Saving TF-IDF matrix to " + OUTPUT_TFIDF_FILE
-    np.savetxt(DATA_DIRECTORY + O./UTPUT_TFIDF_FILE, tfidf, fmt='%0.6f', delimiter='\t', newline='\n')
+          
+def __write_tfidf_file(tfidf):
+    print "Saving TF-IDF matrix to " + OUTPUT_TFIDF_FILE
+    np.savetxt(DATA_DIRECTORY + OUTPUT_TFIDF_FILE, tfidf, fmt='%0.6f', delimiter='\t', newline='\n')
 
-f __write_sims_file(similarities):
-  print "Saving cosine similarities to " + OUTPUT_SIMS_FILE   np.savetxt(DATA_DIRECTORY + O./UTPUT_SIMS_FILE, similarities, fmt='%0.6f', delimiter='\t', newline='\n')
+def __write_sims_file(similarities):
+    print "Saving cosine similarities to " + OUTPUT_SIMS_FILE
+    np.savetxt(DATA_DIRECTORY + OUTPUT_SIMS_FILE, similarities, fmt='%0.6f', delimiter='\t', newline='\n')
 
-f train_content_based_recommender():
-  html_contents = __get_tokenized_html_content()   terms_document_frequency = __compute_term_frequency(html_contents)
-    term_list = __dictionary_to_list(terms_document_frequency)
-    artists_count = len(html_contents.items())
-    terms_count = len(terms_document_frequency)
+def train_content_based_recommender(retrain):
+    if not os.path.exists(DATA_DIRECTORY + OUTPUT_SIMS_FILE) or retrain:
+        html_contents = __get_tokenized_html_content()
+        terms_document_frequency = __compute_term_frequency(html_contents)
+        term_list = __dictionary_to_list(terms_document_frequency)
+        artists_count = len(html_contents.items())
+        terms_count = len(terms_document_frequency)
 
-    inverse_document_frequency = __compute_document_frequency_vector(terms_count, artists_count, terms_document_frequency, term_list)
-    tfidf = __compute_term_frequency_inverse_document_frequency(artists_count, terms_count, html_contents, term_list, inverse_document_frequency)
-    similarities = __compute_similarities(artists_count, tfidf)
+        inverse_document_frequency = __compute_document_frequency_vector(terms_count, artists_count, terms_document_frequency, term_list)
+        tfidf = __compute_term_frequency_inverse_document_frequency(artists_count, terms_count, html_contents, term_list, inverse_document_frequency)
+        similarities = __compute_similarities(artists_count, tfidf)
 
-    __write_tfidf_file(tfidf)
-    __write_terms_file(term_list)
-    __write_sims_file(similarities)
+        __write_tfidf_file(tfidf)
+        __write_terms_file(term_list)
+        __write_sims_file(similarities)
 
-train_content_based_recommender()
+train_content_based_recommender(retrain=False)

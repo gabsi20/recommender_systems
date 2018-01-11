@@ -9,10 +9,12 @@ UAM_FILE = "data/C1ku_UAM.txt"
 ARTISTS_FILE = "data/C1ku_idx_artists.txt"
 USERS_FILE = "data/C1ku_idx_users.txt"
 ARTISTS_EXTENDED = "data/C1ku_artists_extended.csv"
+AAM_FILE = "data/AAM.txt"
 ARTISTS = file.read_from_file(ARTISTS_FILE)
 USERS = file.read_from_file(USERS_FILE)
 UAM = np.loadtxt(UAM_FILE, delimiter='\t', dtype=np.float32)
 ARTISTS_DATA = file.read_from_file(ARTISTS_EXTENDED)
+AAM = file.read_from_file(AAM_FILE)
 
 MAX_RECOMMENDATIONS = 10
 
@@ -61,16 +63,13 @@ def collaborative_filtering_recommender(user, K):
                 counter[artist_idx] = UAM[neighbour, artist_idx] * (len(neighbours_idx) - idx)
     return sorted(counter, key=counter.get, reverse=True)[0:9]
 
-def content_based_recommender():
-    fetch.get_artists_context(refetch=True)
-    train.train_content_based_recommender()
-    return 'content based recommender not implemented'
-
+def content_based_recommender(user, K):
+    return random_user_recommender(100)
 
 print random_user_recommender(100)
 print random_artist_recommender(100)
 print popularity_recommender()
 print collaborative_filtering_recommender(100, 3)
-print content_based_recommender()
+print content_based_recommender(100, 3)
 
 

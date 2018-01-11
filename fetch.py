@@ -46,3 +46,5 @@ def get_artists_context(refetch):
             
     else:
         print "data already exists"
+
+get_artists_context(refetch=False)
