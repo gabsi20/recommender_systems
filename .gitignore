@@ -106,6 +106,6 @@ wikipedia_pages/
 
 .DS_Store 
 
-results/
+results/*.png
 tfidfs.txt
 
