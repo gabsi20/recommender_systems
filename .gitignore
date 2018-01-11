@@ -102,7 +102,7 @@ ENV/
 # mypy
 .mypy_cache/
 
-wikipedia_pages/
+last_fm/
 
 .DS_Store 
 
