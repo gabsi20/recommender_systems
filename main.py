@@ -22,7 +22,7 @@ FOLDS = 10
 
 def random_artist_recommender(UAM, user, _K):
     user_playcounts = UAM[user, :]
-    recommendation_pool = np.nonzero(user_playcounts == 0)[0]
+    recommendation_pool = np.where(user_playcounts == 0)[0]
     return random.sample(recommendation_pool, len(recommendation_pool))
 
 def random_user_recommender(UAM, user, K):
@@ -36,17 +36,15 @@ def random_user_recommender(UAM, user, K):
     return random.sample(recommendation_pool, len(recommendation_pool))
 
 def popularity_recommender(UAM, _user, _K):
-    sums = np.sum(UAM, axis=0)
+    sums = np.sum(UAM, axis=1)
     top_ranked_indizes = np.argsort(sums)
     return top_ranked_indizes[::-1]
-
 
 def get_nonzero_artists_from_users(users_playcounts):
     artist_pool = []
     for user_playcount in users_playcounts:
         artist_pool.extend(np.nonzero(user_playcount)[0])
     return np.unique(artist_pool)
-
 
 def collaborative_filtering_recommender(UAM, user, K):
     pc_vec = UAM[user, :]
