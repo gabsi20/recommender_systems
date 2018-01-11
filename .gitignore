@@ -105,4 +105,7 @@ ENV/
 last_fm/
 
 .DS_Store 
+
+results/*.png
 tfidfs.txt
+
