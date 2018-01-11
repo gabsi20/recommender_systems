@@ -7,9 +7,9 @@ import fetch
 import progress
 
 DATA_DIRECTORY = "./data/"
-OUTPUT_TFIDF_FILE = "tfidfs.txt"  # term frequency inverse document frequency
-OUTPUT_TERMS_FILE = "terms.txt"   # term list
-OUTPUT_SIMS_FILE = "AAM.txt"      # artist artist matrix
+OUTPUT_TFIDF_FILE = "tfidfs.txt"
+OUTPUT_TERMS_FILE = "terms.txt"
+OUTPUT_SIMS_FILE = "AAM.txt"
 
 STOP_WORDS = ["a", "about", "above", "after", "again", "against", "all", "am", "an", "and", "any", "are", "aren't", "as", "at", "be", "because", "been", "before", "being", "below", "between", "both", "but", "by", "can't", "cannot", "could", "couldn't", "did", "didn't", "do", "does", "doesn't", "doing", "don't", "down", "during", "each", "few", "for", "from", "further", "had", "hadn't", "has", "hasn't", "have", "haven't", "having", "he", "he'd", "he'll", "he's", "her", "here", "here's", "hers", "herself", "him", "himself", "his", "how", "how's", "i", "i'd", "i'll", "i'm", "i've", "if", "in", "into", "is", "isn't", "it", "it's", "its", "itself", "let's", "me", "more", "most", "mustn't", "my", "myself", "no", "nor", "not", "of", "off", "on", "once", "only", "or", "other", "ought", "our", "ours", "ourselves", "out", "over", "own", "same", "shan't", "she", "she'd", "she'll", "she's", "should", "shouldn't", "so", "some", "such", "than", "that", "that's", "the", "their", "theirs", "them", "themselves", "then", "there", "there's", "these", "they", "they'd", "they'll", "they're", "they've", "this", "those", "through", "to", "too", "under", "until", "up", "very", "was", "wasn't", "we", "we'd", "we'll", "we're", "we've", "were", "weren't", "what", "what's", "when", "when's", "where", "where's", "which", "while", "who", "who's", "whom", "why", "why's", "with", "won't", "would", "wouldn't", "you", "you'd", "you'll", "you're", "you've", "your", "yours", "yourself", "yourselves"]
 
@@ -44,8 +44,8 @@ def __get_tokenized_html_content():
             tokens_filtered_stopped = filter(lambda t: t not in STOP_WORDS, tokens_filtered)
             html_contents[i] = tokens_filtered_stopped
             progress.print_progressbar(i, len(artists), html_filename + ' ' + str(len(tokens_filtered_stopped)) + ' tokens')
-        # else:
-        #     print "Target file " + html_filename + " does not exist!"
+        else:
+            print "Target file " + html_filename + " does not exist!"
     
     return html_contents
 
@@ -70,8 +70,6 @@ def __compute_similarities(artists_count, term_frequency_inverse_document_freque
         for j in range(i, artists_count):
             cosine_matrix = 1.0 - scidist.cosine(term_frequency_inverse_document_frequency[i], term_frequency_inverse_document_frequency[j])
 
-            # If either TF-IDF vector (of i or j) only contains zeros, cosine similarity is not defined (NaN: not a number).
-            # In this case, similarity between i and j is set to zero (or left at zero, in our case).
             if not np.isnan(cosine_matrix):
                 similarities[i, j] = cosine_matrix
                 similarities[j, i] = cosine_matrix
@@ -139,4 +137,5 @@ def train_content_based_recommender(retrain):
         __write_terms_file(term_list)
         __write_sims_file(similarities)
 
-train_content_based_recommender(retrain=False)
+if __name__ == "__main__":
+    train_content_based_recommender(retrain=False)

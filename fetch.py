@@ -5,14 +5,14 @@ import file
 import progress
 
 # Parameters
-WIKIPEDIA_URL = "http://en.wikipedia.org/wiki/"
+FETCH_TARGET_URL = "https://www.last.fm/music/"
 
 ARTISTS_FILE = "./data/LFM1b_artists.txt"          # text file containing Last.fm user names
-OUTPUT_DIRECTORY = "./data/wikipedia_pages"     # directory to write output to
+OUTPUT_DIRECTORY = "./data/last_fm"     # directory to write output to
 
-def __fetch_wikipedia_page(artist):
+def __fetch_page(artist):
     artist_quoted = urllib.quote(artist)
-    url = WIKIPEDIA_URL + artist_quoted
+    url = FETCH_TARGET_URL + artist_quoted
 
     try:
         content = urllib.urlopen(url).read()
@@ -35,16 +35,14 @@ def __write_htmlfile(i, html_content):
         print error
 
 def get_artists_context(refetch):
-    if not os.path.exists(OUTPUT_DIRECTORY) or refetch:
-        print "fetch data"
-        artists = file.read_from_file(ARTISTS_FILE)
+    print "fetch data"
+    artists = file.read_from_file(ARTISTS_FILE)
 
-        for i in range(0, len(artists)):
-            html_content = __fetch_wikipedia_page(artists[i][1])
+    for i in range(0, len(artists)):
+        if not os.path.exists(OUTPUT_DIRECTORY + "/" + str(i) + ".html") or refetch:
+            html_content = __fetch_page(artists[i][1])
             __write_htmlfile(i, html_content)
             progress.print_progressbar(i, len(artists), artists[i][1])
             
-    else:
-        print "data already exists"
-
-get_artists_context(refetch=False)
+if __name__ == "__main__":
+    get_artists_context(refetch=False)
