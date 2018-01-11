@@ -1,6 +1,7 @@
 import numpy as np
 import random
 import file
+import train
 import fetch
 from sets import Set
 from sklearn import cross_validation  
@@ -11,10 +12,12 @@ UAM_FILE = "data/C1ku_UAM.txt"
 ARTISTS_FILE = "data/C1ku_idx_artists.txt"
 USERS_FILE = "data/C1ku_idx_users.txt"
 ARTISTS_EXTENDED = "data/C1ku_artists_extended.csv"
+AAM_FILE = "data/AAM.txt"
 ARTISTS = file.read_from_file(ARTISTS_FILE)
 USERS = file.read_from_file(USERS_FILE)
 UAM = np.loadtxt(UAM_FILE, delimiter='\t', dtype=np.float32)
 ARTISTS_DATA = file.read_from_file(ARTISTS_EXTENDED)
+AAM = file.read_from_file(AAM_FILE)
 
 
 FOLDS = 10
@@ -66,9 +69,6 @@ def collaborative_filtering_recommender(UAM, user, K):
                 counter[artist_idx] = UAM[neighbour, artist_idx] * (len(neighbours_idx) - idx)
     return sorted(counter, key=counter.get, reverse=True)
 
-def content_based_recommender():
-    fetch.get_artists_context(refetch=True)
-    return 'content based recommender not implemented'
 
 def evaluate(method):
     precisions = []
@@ -120,4 +120,6 @@ evaluate(random_user_recommender)
 evaluate(popularity_recommender)
 evaluate(collaborative_filtering_recommender)
 
+def content_based_recommender(user, K):
+    return random_user_recommender(100)
 

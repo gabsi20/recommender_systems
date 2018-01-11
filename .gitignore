@@ -107,3 +107,5 @@ wikipedia_pages/
 .DS_Store 
 
 results/
+tfidfs.txt
+
