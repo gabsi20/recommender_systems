@@ -16,7 +16,7 @@ ARTISTS = file.read_from_file(ARTISTS_FILE)
 USERS = file.read_from_file(USERS_FILE)
 UAM = np.loadtxt(UAM_FILE, delimiter='\t', dtype=np.float32)
 ARTISTS_DATA = file.read_from_file(ARTISTS_EXTENDED)
-AAM = file.read_from_file(AAM_FILE)
+# AAM = file.read_from_file(AAM_FILE)
 
 FOLDS = 10
 
@@ -67,15 +67,16 @@ def collaborative_filtering_recommender(UAM, user, K):
 
 
 def evaluate(method, color="r"):
-    recommendation_count = 10
+    MAX_RECOMMENDATIONS = 100
     MAX_USERS = 5
 
     sample_users = random.sample(range(0, UAM.shape[0]), MAX_USERS)
 
     precisions = []
     recalls = []
+    f_measures = []
 
-    for recommendations_count in [1,2,5,10,20,50,100]:
+    for recommendations_count in range(1, MAX_RECOMMENDATIONS):
 
         avg_precision = 0
         avg_recall = 0
@@ -97,27 +98,34 @@ def evaluate(method, color="r"):
                 precision = 100.0 if len(result_indizes) == 0 else 100.0 * true_positives / len(result_indizes)
                 recall = 100.0 if len(test_artists) == 0 else 100.0 * true_positives / len(test_artists)
 
-                avg_precision += precision
-                avg_recall += recall
+                avg_precision += precision / (FOLDS * MAX_USERS)
+                avg_recall += recall  / (FOLDS * MAX_USERS)
 
-        f_measure = 2 * ((avg_precision * avg_recall) / (precision + recall)) if (precision + recall) else 0.00
+        f_measure = 2 * ((avg_precision * avg_recall) / (avg_precision + avg_recall)) if (avg_precision + avg_recall) else 0.00
 
-        precisions.append(avg_precision / (FOLDS * MAX_USERS) )
-        recalls.append(avg_recall / (FOLDS * MAX_USERS))
+        precisions.append(avg_precision)
+        recalls.append(avg_recall)
+        f_measures.append(f_measure)
 
-        print ("\n\nMean Average Precision: %.2f\nMean Average Recall %.2f" % (avg_precision / (FOLDS * MAX_USERS), avg_recall / (FOLDS * MAX_USERS)))
+        print ("\n\nMean Average Precision: %.2f\nMean Average Recall %.2f" % (avg_precision, avg_recall))
 
-    plt.plot(recalls, precisions, color)
-    plt.savefig('./results/' + method.__name__ + '.png')
+    precion_recall_plot.plot(recalls, precisions, color)
+    f1_plot.plot(range(1, MAX_RECOMMENDATIONS), f_measures, color)
+
+
+plot1 = plt.figure()
+plot2 = plt.figure()
+
+precion_recall_plot = plot1.add_subplot(111)
+f1_plot = plot2.add_subplot(111)
 
 evaluate(random_artist_recommender, 'r')
 evaluate(random_user_recommender, 'g')
 evaluate(popularity_recommender, 'b')
 evaluate(collaborative_filtering_recommender, 'y')
 
-plt.axis()
-plt.show()
-plt.savefig('./results/compared.png')
+plot1.savefig('./results/pr_compared.png')
+plot2.savefig('./results/f1_compared.png')
 
 print "Done."
 
