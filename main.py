@@ -128,7 +128,3 @@ plot1.savefig('./results/pr_compared.png')
 plot2.savefig('./results/f1_compared.png')
 
 print "Done."
-
-def content_based_recommender(user, K):
-    return random_user_recommender(100)
-
