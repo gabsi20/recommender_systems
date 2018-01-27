@@ -65,13 +65,15 @@ def collaborative_filtering_recommender(UAM, user, K):
     return sorted(counter, key=counter.get, reverse=True)
 
 def content_based_recommender(UAM, user, K):
-  count_artists = min(len(np.nonzero(UAM[100,:])[0]),200)
+  count_artists = min(len(np.nonzero(UAM[100,:])[0]),20)
   pc_vec = np.argsort(UAM[user,:])[(count_artists * (-1)):]
   sort_idx = np.argsort(AAM[pc_vec,:], axis=1)
-  neighbor_idx = list(set(sort_idx[:,-1-K:-1].flatten()))
+  neighbor_idx = sort_idx[:,-1-K:-1]
+  neighbor_idx = list(set(neighbor_idx.flatten()))
   for idx in pc_vec:
     if idx in neighbor_idx:
-      neighbor_idx.pop(neighbor_idx.index(idx))
+      neighbor_idx.remove(idx)
+
   return neighbor_idx
 
 def evaluate(method, color="r"):
@@ -130,8 +132,7 @@ evaluate(random_artist_recommender, 'r')
 evaluate(random_user_recommender, 'g')
 evaluate(popularity_recommender, 'b')
 evaluate(collaborative_filtering_recommender, 'y')
-evaluate(content_based_recommender)
-
+evaluate(content_based_recommender, 'r')
 
 plot1.savefig('./results/pr_compared.png')
 plot2.savefig('./results/f1_compared.png')
