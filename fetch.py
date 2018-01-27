@@ -134,20 +134,60 @@ def __compute_genre_similarity(artists_data, genres, artist_names):
             vec_b = artists_data[index2]
             intersect = len(np.intersect1d(vec_a, vec_b))
             union = max(len(np.union1d(vec_a, vec_b)), 1)
-            similarity = intersect / float(union)
+            jaccard = intersect / float(union)
 
-            if not np.isnan(similarity):
-                AAM[index, index2] = similarity
-                AAM[index2, index] = similarity
+            if not np.isnan(jaccard):
+                AAM[index, index2] = jaccard
+                AAM[index2, index] = jaccard
 
     np.savetxt(DATA_DIRECTORY + AAM_FILE, AAM, fmt='%0.3f', delimiter='\t', newline='\n')
         
 def __get_all_genres(artists_data):
-    genre_set = set()
+    genres = {}
+    term_index = 0
     for index in range(0, len(artists_data)):
         for element in artists_data[index]:
-            genre_set.add(element)
-    return sorted(list(genre_set))
+            if element in genres:
+                genres[element]['count'] += 1
+            else:
+                genres[element] = {
+                    'index': term_index,
+                    'count': 1
+                }
+                term_index += 1
+
+    return genres
+
+def __compute_tfidf(artists_data, genres):
+    document_count = len(artists_data)
+    term_count = len(genres)
+
+    tfidf = np.zeros(shape=(document_count, term_count), dtype=np.float32)
+    idf = np.zeros(term_count, dtype=np.float32)
+    for genre in genres:
+        idf[genres[genre]['index']] = np.log(document_count / genres[genre]['count'])
+
+    for document_index in range(0, document_count):
+        for term in artists_data[document_index]:
+            tfidf[document_index, genres[term]['index']] += 1
+
+    return np.log1p(tfidf) * np.tile(idf, document_count).reshape(document_count, term_count)
+
+def __compute_genre_similarity_tfidf(tfidf, artist_names):
+    artist_count = len(tfidf)
+    AAM = np.zeros(shape=(artist_count, artist_count), dtype=np.float32)
+
+    for index in range(0, artist_count):
+        progress.print_progressbar(index, artist_count, artist_names[index])
+        
+        for index2 in range(index, artist_count):
+            simmilarity = 1.0 - scidist.cosine(tfidf[index], tfidf[index2])
+
+            if not np.isnan(simmilarity):
+                AAM[index, index2] = simmilarity
+                AAM[index2, index] = simmilarity
+
+    np.savetxt(DATA_DIRECTORY + AAM_FILE, AAM, fmt='%0.3f', delimiter='\t', newline='\n')
 
 def get_artists_context(fetch, calculate):
     if(fetch):
@@ -160,7 +200,9 @@ def get_artists_context(fetch, calculate):
         artist_names = map(lambda x: x[1], artists_data)
         artists_data = map(lambda x: np.array(np.array(x)[12:]), artists_data)
         all_genres = __get_all_genres(artists_data)
-        __compute_genre_similarity(artists_data, all_genres, artist_names)
+        tfidf = __compute_tfidf(artists_data, all_genres)
+        __compute_genre_similarity_tfidf(tfidf, artist_names)
+        # __compute_genre_similarity(artists_data, all_genres, artist_names)
         #__compute_audio_feature_similarity(artists_data)
     print 'finished'
 

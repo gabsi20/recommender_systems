@@ -1,4 +1,5 @@
 data/AAM.txt
+data/AAM_tfidf.txt
 .vscode/
 
 # Byte-compiled / optimized / DLL files
