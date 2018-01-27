@@ -65,6 +65,10 @@ def collaborative_filtering_recommender(UAM, user, K):
                 counter[artist_idx] = UAM[neighbour, artist_idx] * (len(neighbours_idx) - idx)
     return sorted(counter, key=counter.get, reverse=True)
 
+def hybrid_cf_po_recommender(UAM, user, K):
+    collaborative_filtering_recommender
+
+
 def start_evaluation_with_multithreading():
     plot_1 = plt.figure()
     plot_2 = plt.figure()
@@ -91,7 +95,6 @@ def start_evaluation_with_multithreading():
 def start_cold_start_evaluation_with_multithreading():
     plot_3 = plt.figure()
     cs_plot = plot_3.add_subplot(111)
-    cs_plot.set_yscale('log')
 
     threads = [threading.Thread(target=evaluation.evaluate_cold_start, args=(random_artist_recommender, UAM, cs_plot, 'r')),
         threading.Thread(target=evaluation.evaluate_cold_start, args=(random_user_recommender, UAM, cs_plot, 'g')),
