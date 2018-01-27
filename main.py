@@ -3,20 +3,22 @@ import random
 import file
 import train
 from sets import Set
-from sklearn import cross_validation  
-import scipy.spatial.distance as scidist 
+from sklearn import cross_validation
+import scipy.spatial.distance as scidist
 import matplotlib.pyplot as plt
 
-UAM_FILE = "data/C1ku_UAM.txt"
+#UAM_FILE = "data/C1ku_UAM.txt"
+UAM_FILE = "data/tempdata/UAM.txt"
 ARTISTS_FILE = "data/C1ku_idx_artists.txt"
 USERS_FILE = "data/C1ku_idx_users.txt"
 ARTISTS_EXTENDED = "data/C1ku_artists_extended.csv"
-AAM_FILE = "data/AAM.txt"
+#AAM_FILE = "data/AAM.txt"
+AAM_FILE = "data/tempdata/AAM.txt"
 ARTISTS = file.read_from_file(ARTISTS_FILE)
 USERS = file.read_from_file(USERS_FILE)
 UAM = np.loadtxt(UAM_FILE, delimiter='\t', dtype=np.float32)
 ARTISTS_DATA = file.read_from_file(ARTISTS_EXTENDED)
-# AAM = file.read_from_file(AAM_FILE)
+AAM = file.read_from_file(AAM_FILE)
 
 FOLDS = 10
 
@@ -50,7 +52,7 @@ def collaborative_filtering_recommender(UAM, user, K):
     pc_vec = UAM[user, :]
     sim_users = np.zeros(shape=(UAM.shape[0]), dtype=np.float32)
     for user_index in range(0, UAM.shape[0]):
-        sim_users[user_index] = 1.0 - scidist.cosine(pc_vec, UAM[user_index,:])   
+        sim_users[user_index] = 1.0 - scidist.cosine(pc_vec, UAM[user_index,:])
     sort_idx = np.argsort(sim_users)
     neighbours_idx = sort_idx[-1-K:-1]
     counter = {}
@@ -65,6 +67,40 @@ def collaborative_filtering_recommender(UAM, user, K):
                 counter[artist_idx] = UAM[neighbour, artist_idx] * (len(neighbours_idx) - idx)
     return sorted(counter, key=counter.get, reverse=True)
 
+def content_based_recommender(UAM, user, K):
+  pc_vec = UAM[user:]
+  sort_idx = np.argsort(AAM[pc_vec,:], axis=1)
+
+  '''    # Select the K closest artists to all artists the seed user listened to
+    neighbor_idx = sort_idx[:,-1-K:-1]
+
+
+    ##### ADDED FOR SCORE-BASED FUSION  #####
+    dict_recommended_artists_idx = {}           # dictionary to hold recommended artists and corresponding scores
+
+    # Distill corresponding similarity scores and store in sims_neighbors_idx
+    sims_neighbors_idx = np.zeros(shape=(len(seed_aidx_train), K), dtype=np.float32)
+    for i in range(0, neighbor_idx.shape[0]):
+        sims_neighbors_idx[i] = AAM[seed_aidx_train[i], neighbor_idx[i]]
+
+    # Aggregate the artists in neighbor_idx.
+    # To this end, we compute their average similarity to the seed artists
+    uniq_neighbor_idx = set(neighbor_idx.flatten())     # First, we obtain a unique set of artists neighboring the seed user's artists.
+    # Now, we find the positions of each unique neighbor in neighbor_idx.
+    for nidx in uniq_neighbor_idx:
+        mask = np.where(neighbor_idx == nidx)
+        # Apply this mask to corresponding similarities and compute average similarity
+        avg_sim = np.mean(sims_neighbors_idx[mask])
+        # Store artist index and corresponding aggregated similarity in dictionary of arists to recommend
+        dict_recommended_artists_idx[nidx] = avg_sim
+    #########################################
+
+    # Remove all artists that are in the training set of seed user
+    for aidx in seed_aidx_train:
+        dict_recommended_artists_idx.pop(aidx, None)            # drop (key, value) from dictionary if key (i.e., aidx) exists; otherwise return None
+
+    # Return dictionary of recommended artist indices (
+  '''
 
 def evaluate(method, color="r"):
     MAX_RECOMMENDATIONS = 100
@@ -112,7 +148,7 @@ def evaluate(method, color="r"):
     precion_recall_plot.plot(recalls, precisions, color)
     f1_plot.plot(range(1, MAX_RECOMMENDATIONS), f_measures, color)
 
-
+'''
 plot1 = plt.figure()
 plot2 = plt.figure()
 
@@ -126,5 +162,6 @@ evaluate(collaborative_filtering_recommender, 'y')
 
 plot1.savefig('./results/pr_compared.png')
 plot2.savefig('./results/f1_compared.png')
+'''
 
 print "Done."
