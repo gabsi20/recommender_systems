@@ -2,9 +2,11 @@ import numpy as np
 import random
 import file
 from sets import Set
-from sklearn import cross_validation
 import scipy.spatial.distance as scidist
 import matplotlib.pyplot as plt
+import evaluation
+import threading
+import sys
 
 UAM_FILE = "data/C1ku_UAM.txt"
 ARTISTS_FILE = "data/C1ku_idx_artists.txt"
@@ -16,8 +18,6 @@ USERS = file.read_from_file(USERS_FILE)
 UAM = np.loadtxt(UAM_FILE, delimiter='\t', dtype=np.float32)
 ARTISTS_DATA = file.read_from_file(ARTISTS_EXTENDED)
 AAM = np.loadtxt(AAM_FILE, delimiter='\t', dtype=np.float32)
-
-FOLDS = 10
 
 def random_artist_recommender(UAM, user, _K):
     user_playcounts = UAM[user, :]
@@ -64,6 +64,11 @@ def collaborative_filtering_recommender(UAM, user, K):
                 counter[artist_idx] = UAM[neighbour, artist_idx] * np.take(sim_users,neighbour)
     return sorted(counter, key=counter.get, reverse=True)
 
+
+def hybrid_cf_po_recommender(UAM, user, K):
+    collaborative_filtering_recommender
+
+
 def content_based_recommender(UAM, user, K):
   count_artists = min(len(np.nonzero(UAM[100,:])[0]),20)
   pc_vec = np.argsort(UAM[user,:])[(count_artists * (-1)):]
@@ -82,66 +87,54 @@ def hybrid_CB_CF_recommender(UAM, user, K):
 
   return np.union1d(CB,CF)
 
-def evaluate(method, color="r"):
-    MAX_RECOMMENDATIONS = 100
-    MAX_USERS = 5
+def start_evaluation_with_multithreading():
+    plot_1 = plt.figure()
+    plot_2 = plt.figure()
 
-    sample_users = random.sample(range(0, UAM.shape[0]), MAX_USERS)
+    precion_recall_plot = plot_1.add_subplot(111)
+    f1_plot = plot_2.add_subplot(111)
 
-    precisions = []
-    recalls = []
-    f_measures = []
+    threads = [threading.Thread(target=evaluation.evaluate, args=(random_artist_recommender, UAM, precion_recall_plot, f1_plot, 'r')),
+        threading.Thread(target=evaluation.evaluate, args=(random_user_recommender, UAM, precion_recall_plot, f1_plot, 'g')),
+        threading.Thread(target=evaluation.evaluate, args=(popularity_recommender, UAM, precion_recall_plot, f1_plot, 'b')),
+        threading.Thread(target=evaluation.evaluate, args=(collaborative_filtering_recommender, UAM, precion_recall_plot, f1_plot, 'y')),
+        threading.Thread(target=evaluation.evaluate, args=(content_based_recommender, UAM, precion_recall_plot, f1_plot, 'y'))
+    ]
 
-    for recommendations_count in range(1, MAX_RECOMMENDATIONS):
+    for thread in threads:
+        thread.start()
 
-        avg_precision = 0
-        avg_recall = 0
+    for thread in threads:
+        thread.join()
 
-        for user_index in sample_users:
-            user = UAM[user_index:]
+    plot_1.savefig('./results/pr_compared.png')
+    plot_2.savefig('./results/f1_compared.png')
 
-            folds = cross_validation.KFold(len(user), n_folds=FOLDS)
+def start_cold_start_evaluation_with_multithreading():
+    plot_3 = plt.figure()
+    cs_plot = plot_3.add_subplot(111)
 
-            for _train_artists, test_artists in folds:
-                training_uam = UAM.copy()
-                training_uam[user_index, test_artists] = 0.0
+    threads = [threading.Thread(target=evaluation.evaluate_cold_start, args=(random_artist_recommender, UAM, cs_plot, 'r')),
+        threading.Thread(target=evaluation.evaluate_cold_start, args=(random_user_recommender, UAM, cs_plot, 'g')),
+        threading.Thread(target=evaluation.evaluate_cold_start, args=(popularity_recommender, UAM, cs_plot, 'b')),
+        threading.Thread(target=evaluation.evaluate_cold_start, args=(collaborative_filtering_recommender, UAM, cs_plot, 'y')),
+        threading.Thread(target=evaluation.evaluate_cold_start, args=(content_based_recommender, UAM, cs_plot, 'y'))
+    ]
 
-                result_indizes = method(training_uam, user_index, 100)[0:recommendations_count]
-                correct_indizes = np.intersect1d(user[test_artists], result_indizes)
+    for thread in threads:
+        thread.start()
 
-                true_positives = len(correct_indizes)
+    for thread in threads:
+        thread.join()
 
-                precision = 100.0 if len(result_indizes) == 0 else 100.0 * true_positives / len(result_indizes)
-                recall = 100.0 if len(test_artists) == 0 else 100.0 * true_positives / len(test_artists)
+    plot_3.savefig('./results/f1_listenings.png')
 
-                avg_precision += precision / (FOLDS * MAX_USERS)
-                avg_recall += recall  / (FOLDS * MAX_USERS)
-
-        f_measure = 2 * ((avg_precision * avg_recall) / (avg_precision + avg_recall)) if (avg_precision + avg_recall) else 0.00
-
-        precisions.append(avg_precision)
-        recalls.append(avg_recall)
-        f_measures.append(f_measure)
-
-        print ("\n\nMean Average Precision: %.2f\nMean Average Recall %.2f" % (avg_precision, avg_recall))
-
-    precion_recall_plot.plot(recalls, precisions, color)
-    f1_plot.plot(range(1, MAX_RECOMMENDATIONS), f_measures, color)
-
-plot1 = plt.figure()
-plot2 = plt.figure()
-
-precion_recall_plot = plot1.add_subplot(111)
-f1_plot = plot2.add_subplot(111)
-
-evaluate(random_artist_recommender, 'r')
-evaluate(random_user_recommender, 'g')
-evaluate(popularity_recommender, 'b')
-evaluate(collaborative_filtering_recommender, 'y')
-evaluate(content_based_recommender, 'c')
-evaluate(hybrid_CB_CF_recommender, 'm')
-
-plot1.savefig('./results/pr_compared.png')
-plot2.savefig('./results/f1_compared.png')
-
+if len(sys.argv) < 2: print "no arguments set"
+elif sys.argv[1] == "cb": evaluation.evaluate(content_based_recommender, UAM, None, None, 'y'),
+elif sys.argv[1] == "cf": evaluation.evaluate(collaborative_filtering_recommender, UAM, None, None, 'y'),
+elif sys.argv[1] == "po": evaluation.evaluate(popularity_recommender, UAM, None, None, 'b'),
+elif sys.argv[1] == "ru": evaluation.evaluate(random_user_recommender, UAM, None, None, 'g'),
+elif sys.argv[1] == "ra": evaluation.evaluate(random_artist_recommender, UAM, None, None, 'r'),
+elif sys.argv[1] == "ev": start_evaluation_with_multithreading(),
+elif sys.argv[1] == "cs": start_cold_start_evaluation_with_multithreading()
 print "Done."
