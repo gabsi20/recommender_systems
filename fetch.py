@@ -4,7 +4,7 @@ import file
 import progress
 import requests
 import numpy as np
-import scipy.spatial.distance as scidist 
+import scipy.spatial.distance as scidist
 
 # Parameters
 API_BASE_URL = 'https://api.spotify.com/v1/'
@@ -102,7 +102,7 @@ def __write_csv_file(artists_data, index):
         except:
             writer.writerow([artists_data[index]['id']] + [0,0,0,0,0,0,0,0,0,0,0])
 
-def __compute_similarity(artists_data):
+def __compute_audio_feature_similarity(artists_data):
     matrix_size = 20 # len(artists_data)
     AAM = np.zeros(shape=(matrix_size, matrix_size), dtype=np.float32)
 
@@ -122,6 +122,33 @@ def __compute_similarity(artists_data):
 
     np.savetxt(DATA_DIRECTORY + AAM_FILE, AAM, fmt='%0.6f', delimiter='\t', newline='\n')
 
+def __compute_genre_similarity(artists_data, genres, artist_names):
+    matrix_size = len(artists_data)
+    AAM = np.zeros(shape=(matrix_size, matrix_size), dtype=np.float32)
+    
+    for index in range(0, matrix_size):
+        progress.print_progressbar(index, matrix_size, artist_names[index])
+
+        for index2 in range(0, matrix_size):
+            vec_a = artists_data[index] # map(lambda x: genres.index(x), artists_data[index])
+            vec_b = artists_data[index2] #map(lambda x: genres.index(x), artists_data[index2])
+            intersect = len(np.intersect1d(vec_a, vec_b))
+            union = max(len(np.union1d(vec_a, vec_b)), 1)
+            similarity = intersect / float(union)
+
+            if not np.isnan(similarity):
+                AAM[index, index2] = similarity
+                AAM[index2, index] = similarity
+
+    np.savetxt(DATA_DIRECTORY + AAM_FILE, AAM, fmt='%0.6f', delimiter='\t', newline='\n')
+        
+def __get_all_genres(artists_data):
+    genre_set = set()
+    for index in range(0, len(artists_data)):
+        for element in artists_data[index]:
+            genre_set.add(element)
+    return sorted(list(genre_set))
+
 def get_artists_context(fetch, calculate):
     if(fetch):
         print 'fetch data'
@@ -130,9 +157,11 @@ def get_artists_context(fetch, calculate):
     if(calculate):
         print 'compute similarity'
         artists_data = file.read_from_file(DATA_DIRECTORY + SPOTIFY_RAW_DATA)
-        significant_audio_features = np.array([3,7,8,10])
-        artists_data = map(lambda x: np.array(np.array(x)[significant_audio_features], dtype=float), artists_data)
-        __compute_similarity(artists_data)
+        artist_names = map(lambda x: x[1], artists_data)
+        artists_data = map(lambda x: np.array(np.array(x)[12:]), artists_data)
+        all_genres = __get_all_genres(artists_data)
+        __compute_genre_similarity(artists_data, all_genres, artist_names)
+        #__compute_audio_feature_similarity(artists_data)
     print 'finished'
 
 if __name__ == '__main__':
