@@ -11,7 +11,7 @@ API_BASE_URL = 'https://api.spotify.com/v1/'
 API_KEY = '' # set SPOTIFY API KEY
 SPOTIFY_RAW_DATA = 'spotify_data.csv'
 
-AAM_FILE = 'C1ku_AAM.txt'
+AAM_FILE = 'AAM.txt'
 DATA_DIRECTORY = './data/'       # directory to write output to
 ARTISTS_FILE = 'C1ku_artists_extended.csv' # text file containing Last.fm user names
 
@@ -129,9 +129,9 @@ def __compute_genre_similarity(artists_data, genres, artist_names):
     for index in range(0, matrix_size):
         progress.print_progressbar(index, matrix_size, artist_names[index])
 
-        for index2 in range(0, matrix_size):
-            vec_a = artists_data[index] # map(lambda x: genres.index(x), artists_data[index])
-            vec_b = artists_data[index2] #map(lambda x: genres.index(x), artists_data[index2])
+        for index2 in range(index, matrix_size):
+            vec_a = artists_data[index]
+            vec_b = artists_data[index2]
             intersect = len(np.intersect1d(vec_a, vec_b))
             union = max(len(np.union1d(vec_a, vec_b)), 1)
             similarity = intersect / float(union)
@@ -140,7 +140,7 @@ def __compute_genre_similarity(artists_data, genres, artist_names):
                 AAM[index, index2] = similarity
                 AAM[index2, index] = similarity
 
-    np.savetxt(DATA_DIRECTORY + AAM_FILE, AAM, fmt='%0.6f', delimiter='\t', newline='\n')
+    np.savetxt(DATA_DIRECTORY + AAM_FILE, AAM, fmt='%0.3f', delimiter='\t', newline='\n')
         
 def __get_all_genres(artists_data):
     genre_set = set()
