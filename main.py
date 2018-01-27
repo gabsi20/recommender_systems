@@ -1,10 +1,9 @@
 import numpy as np
 import random
 import file
-import train
 from sets import Set
-from sklearn import cross_validation  
-import scipy.spatial.distance as scidist 
+from sklearn import cross_validation
+import scipy.spatial.distance as scidist
 import matplotlib.pyplot as plt
 
 UAM_FILE = "data/C1ku_UAM.txt"
@@ -16,7 +15,7 @@ ARTISTS = file.read_from_file(ARTISTS_FILE)
 USERS = file.read_from_file(USERS_FILE)
 UAM = np.loadtxt(UAM_FILE, delimiter='\t', dtype=np.float32)
 ARTISTS_DATA = file.read_from_file(ARTISTS_EXTENDED)
-# AAM = file.read_from_file(AAM_FILE)
+AAM = np.loadtxt(AAM_FILE, delimiter='\t', dtype=np.float32)
 
 FOLDS = 10
 
@@ -50,7 +49,7 @@ def collaborative_filtering_recommender(UAM, user, K):
     pc_vec = UAM[user, :]
     sim_users = np.zeros(shape=(UAM.shape[0]), dtype=np.float32)
     for user_index in range(0, UAM.shape[0]):
-        sim_users[user_index] = 1.0 - scidist.cosine(pc_vec, UAM[user_index,:])   
+        sim_users[user_index] = 1.0 - scidist.cosine(pc_vec, UAM[user_index,:])
     sort_idx = np.argsort(sim_users)
     neighbours_idx = sort_idx[-1-K:-1]
     counter = {}
@@ -65,6 +64,15 @@ def collaborative_filtering_recommender(UAM, user, K):
                 counter[artist_idx] = UAM[neighbour, artist_idx] * (len(neighbours_idx) - idx)
     return sorted(counter, key=counter.get, reverse=True)
 
+def content_based_recommender(UAM, user, K):
+  count_artists = min(len(np.nonzero(UAM[100,:])[0]),200)
+  pc_vec = np.argsort(UAM[user,:])[(count_artists * (-1)):]
+  sort_idx = np.argsort(AAM[pc_vec,:], axis=1)
+  neighbor_idx = list(set(sort_idx[:,-1-K:-1].flatten()))
+  for idx in pc_vec:
+    if idx in neighbor_idx:
+      neighbor_idx.pop(neighbor_idx.index(idx))
+  return neighbor_idx
 
 def evaluate(method, color="r"):
     MAX_RECOMMENDATIONS = 100
@@ -112,7 +120,6 @@ def evaluate(method, color="r"):
     precion_recall_plot.plot(recalls, precisions, color)
     f1_plot.plot(range(1, MAX_RECOMMENDATIONS), f_measures, color)
 
-
 plot1 = plt.figure()
 plot2 = plt.figure()
 
@@ -123,6 +130,8 @@ evaluate(random_artist_recommender, 'r')
 evaluate(random_user_recommender, 'g')
 evaluate(popularity_recommender, 'b')
 evaluate(collaborative_filtering_recommender, 'y')
+evaluate(content_based_recommender)
+
 
 plot1.savefig('./results/pr_compared.png')
 plot2.savefig('./results/f1_compared.png')
