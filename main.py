@@ -65,27 +65,29 @@ def collaborative_filtering_recommender(UAM, user, K):
     return sorted(counter, key=counter.get, reverse=True)
 
 
-def hybrid_cf_po_recommender(UAM, user, K):
-    collaborative_filtering_recommender
+def hybrid_CF_PO_recommender(UAM, user, K):
+    cb_artists = collaborative_filtering_recommender(UAM, user, K)
+    po_artists = popularity_recommender(UAM, user, K)
 
+    return np.intersect1d(cb_artists, po_artists)
 
 def content_based_recommender(UAM, user, K):
-  count_artists = min(len(np.nonzero(UAM[user,:])[0]),20)
-  pc_vec = np.argsort(UAM[user,:])[(count_artists * (-1)):]
-  sort_idx = np.argsort(AAM[pc_vec,:], axis=1)
-  neighbor_idx = sort_idx[:,-1-K:-1]
-  neighbor_idx = list(set(neighbor_idx.flatten()))
-  for idx in pc_vec:
-    if idx in neighbor_idx:
-      neighbor_idx.remove(idx)
+    count_artists = min(len(np.nonzero(UAM[user,:])[0]),20)
+    pc_vec = np.argsort(UAM[user,:])[(count_artists * (-1)):]
+    sort_idx = np.argsort(AAM[pc_vec,:], axis=1)
+    neighbor_idx = sort_idx[:,-1-K:-1]
+    neighbor_idx = list(set(neighbor_idx.flatten()))
+    for idx in pc_vec:
+        if idx in neighbor_idx:
+           neighbor_idx.remove(idx)
 
-  return neighbor_idx
+    return neighbor_idx
 
 def hybrid_CB_CF_recommender(UAM, user, K):
-  CB = content_based_recommender(UAM, user, K)
-  CF = collaborative_filtering_recommender(UAM, user, K)[0:len(CB)]
+    CB = content_based_recommender(UAM, user, K)
+    CF = collaborative_filtering_recommender(UAM, user, K)[0:len(CB)]
 
-  return np.union1d(CB,CF)
+    return np.union1d(CB,CF)
 
 def start_evaluation_with_multithreading():
     plot_1 = plt.figure()
@@ -98,7 +100,9 @@ def start_evaluation_with_multithreading():
         threading.Thread(target=evaluation.evaluate, args=(random_user_recommender, UAM, precion_recall_plot, f1_plot, 'g')),
         threading.Thread(target=evaluation.evaluate, args=(popularity_recommender, UAM, precion_recall_plot, f1_plot, 'b')),
         threading.Thread(target=evaluation.evaluate, args=(collaborative_filtering_recommender, UAM, precion_recall_plot, f1_plot, 'y')),
-        threading.Thread(target=evaluation.evaluate, args=(content_based_recommender, UAM, precion_recall_plot, f1_plot, 'y'))
+        threading.Thread(target=evaluation.evaluate, args=(hybrid_CF_PO_recommender, UAM, precion_recall_plot, f1_plot, 'k')),
+        threading.Thread(target=evaluation.evaluate_cold_start, args=(hybrid_CB_CF_recommender, UAM, precion_recall_plot, f1_plot, 'm')),
+        threading.Thread(target=evaluation.evaluate, args=(content_based_recommender, UAM, precion_recall_plot, f1_plot, 'w'))
     ]
 
     for thread in threads:
@@ -119,7 +123,8 @@ def start_cold_start_evaluation_with_multithreading():
         threading.Thread(target=evaluation.evaluate_cold_start, args=(popularity_recommender, UAM, cs_plot, 'b')),
         threading.Thread(target=evaluation.evaluate_cold_start, args=(collaborative_filtering_recommender, UAM, cs_plot, 'y')),
         threading.Thread(target=evaluation.evaluate_cold_start, args=(content_based_recommender, UAM, cs_plot, 'c')),
-        threading.Thread(target=evaluation.evaluate_cold_start, args=(hybrid_CB_CF_recommender, UAM, cs_plot, 'm'))
+        threading.Thread(target=evaluation.evaluate_cold_start, args=(hybrid_CB_CF_recommender, UAM, cs_plot, 'm')),
+        threading.Thread(target=evaluation.evaluate_cold_start, args=(hybrid_CF_PO_recommender, UAM, cs_plot, 'k'))
     ]
 
     for thread in threads:
@@ -131,12 +136,15 @@ def start_cold_start_evaluation_with_multithreading():
     plot_3.savefig('./results/f1_listenings.png')
 
 if len(sys.argv) < 2: print "no arguments set"
+
+elif sys.argv[1] == "cb": evaluation.evaluate(content_based_recommender, UAM, None, None, 'w'),
 elif sys.argv[1] == "cf": evaluation.evaluate(collaborative_filtering_recommender, UAM, None, None, 'y'),
 elif sys.argv[1] == "cb": evaluation.evaluate(content_based_recommender, UAM, None, None, 'c'),
 elif sys.argv[1] == "ra": evaluation.evaluate(hybrid_CB_CF_recommender, UAM, None, None, 'm'),
 elif sys.argv[1] == "po": evaluation.evaluate(popularity_recommender, UAM, None, None, 'b'),
 elif sys.argv[1] == "ru": evaluation.evaluate(random_user_recommender, UAM, None, None, 'g'),
 elif sys.argv[1] == "ra": evaluation.evaluate(random_artist_recommender, UAM, None, None, 'r'),
+elif sys.argv[1] == "cp": evaluation.evaluate(hybrid_CF_PO_recommender, UAM, None, None, 'k'),
 elif sys.argv[1] == "ev": start_evaluation_with_multithreading(),
 elif sys.argv[1] == "cs": start_cold_start_evaluation_with_multithreading()
 print "Done."
