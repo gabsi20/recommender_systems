@@ -70,7 +70,7 @@ def hybrid_cf_po_recommender(UAM, user, K):
 
 
 def content_based_recommender(UAM, user, K):
-  count_artists = min(len(np.nonzero(UAM[100,:])[0]),20)
+  count_artists = min(len(np.nonzero(UAM[user,:])[0]),20)
   pc_vec = np.argsort(UAM[user,:])[(count_artists * (-1)):]
   sort_idx = np.argsort(AAM[pc_vec,:], axis=1)
   neighbor_idx = sort_idx[:,-1-K:-1]
@@ -118,7 +118,8 @@ def start_cold_start_evaluation_with_multithreading():
         threading.Thread(target=evaluation.evaluate_cold_start, args=(random_user_recommender, UAM, cs_plot, 'g')),
         threading.Thread(target=evaluation.evaluate_cold_start, args=(popularity_recommender, UAM, cs_plot, 'b')),
         threading.Thread(target=evaluation.evaluate_cold_start, args=(collaborative_filtering_recommender, UAM, cs_plot, 'y')),
-        threading.Thread(target=evaluation.evaluate_cold_start, args=(content_based_recommender, UAM, cs_plot, 'y'))
+        threading.Thread(target=evaluation.evaluate_cold_start, args=(content_based_recommender, UAM, cs_plot, 'c')),
+        threading.Thread(target=evaluation.evaluate_cold_start, args=(hybrid_CB_CF_recommender, UAM, cs_plot, 'm'))
     ]
 
     for thread in threads:
@@ -130,8 +131,9 @@ def start_cold_start_evaluation_with_multithreading():
     plot_3.savefig('./results/f1_listenings.png')
 
 if len(sys.argv) < 2: print "no arguments set"
-elif sys.argv[1] == "cb": evaluation.evaluate(content_based_recommender, UAM, None, None, 'y'),
 elif sys.argv[1] == "cf": evaluation.evaluate(collaborative_filtering_recommender, UAM, None, None, 'y'),
+elif sys.argv[1] == "cb": evaluation.evaluate(content_based_recommender, UAM, None, None, 'c'),
+elif sys.argv[1] == "ra": evaluation.evaluate(hybrid_CB_CF_recommender, UAM, None, None, 'm'),
 elif sys.argv[1] == "po": evaluation.evaluate(popularity_recommender, UAM, None, None, 'b'),
 elif sys.argv[1] == "ru": evaluation.evaluate(random_user_recommender, UAM, None, None, 'g'),
 elif sys.argv[1] == "ra": evaluation.evaluate(random_artist_recommender, UAM, None, None, 'r'),
