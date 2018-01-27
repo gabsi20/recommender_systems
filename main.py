@@ -1,7 +1,6 @@
 import numpy as np
 import random
 import file
-import train
 from sets import Set
 import scipy.spatial.distance as scidist 
 import matplotlib.pyplot as plt
@@ -18,7 +17,7 @@ ARTISTS = file.read_from_file(ARTISTS_FILE)
 USERS = file.read_from_file(USERS_FILE)
 UAM = np.loadtxt(UAM_FILE, delimiter='\t', dtype=np.float32)
 ARTISTS_DATA = file.read_from_file(ARTISTS_EXTENDED)
-# AAM = file.read_from_file(AAM_FILE)
+AAM = np.loadtxt(AAM_FILE, delimiter='\t', dtype=np.float32)
 
 def random_artist_recommender(UAM, user, _K):
     user_playcounts = UAM[user, :]
@@ -50,7 +49,7 @@ def collaborative_filtering_recommender(UAM, user, K):
     pc_vec = UAM[user, :]
     sim_users = np.zeros(shape=(UAM.shape[0]), dtype=np.float32)
     for user_index in range(0, UAM.shape[0]):
-        sim_users[user_index] = 1.0 - scidist.cosine(pc_vec, UAM[user_index,:])   
+        sim_users[user_index] = 1.0 - scidist.cosine(pc_vec, UAM[user_index,:])
     sort_idx = np.argsort(sim_users)
     neighbours_idx = sort_idx[-1-K:-1]
     counter = {}
@@ -65,9 +64,22 @@ def collaborative_filtering_recommender(UAM, user, K):
                 counter[artist_idx] = UAM[neighbour, artist_idx] * (len(neighbours_idx) - idx)
     return sorted(counter, key=counter.get, reverse=True)
 
+
 def hybrid_cf_po_recommender(UAM, user, K):
     collaborative_filtering_recommender
 
+
+def content_based_recommender(UAM, user, K):
+  count_artists = min(len(np.nonzero(UAM[100,:])[0]),20)
+  pc_vec = np.argsort(UAM[user,:])[(count_artists * (-1)):]
+  sort_idx = np.argsort(AAM[pc_vec,:], axis=1)
+  neighbor_idx = sort_idx[:,-1-K:-1]
+  neighbor_idx = list(set(neighbor_idx.flatten()))
+  for idx in pc_vec:
+    if idx in neighbor_idx:
+      neighbor_idx.remove(idx)
+
+  return neighbor_idx
 
 def start_evaluation_with_multithreading():
     plot_1 = plt.figure()
@@ -79,7 +91,8 @@ def start_evaluation_with_multithreading():
     threads = [threading.Thread(target=evaluation.evaluate, args=(random_artist_recommender, UAM, precion_recall_plot, f1_plot, 'r')),
         threading.Thread(target=evaluation.evaluate, args=(random_user_recommender, UAM, precion_recall_plot, f1_plot, 'g')),
         threading.Thread(target=evaluation.evaluate, args=(popularity_recommender, UAM, precion_recall_plot, f1_plot, 'b')),
-        threading.Thread(target=evaluation.evaluate, args=(collaborative_filtering_recommender, UAM, precion_recall_plot, f1_plot, 'y'))
+        threading.Thread(target=evaluation.evaluate, args=(collaborative_filtering_recommender, UAM, precion_recall_plot, f1_plot, 'y')),
+        threading.Thread(target=evaluation.evaluate, args=(content_based_recommender, UAM, precion_recall_plot, f1_plot, 'y'))
     ]
 
     for thread in threads:
@@ -91,7 +104,6 @@ def start_evaluation_with_multithreading():
     plot_1.savefig('./results/pr_compared.png')
     plot_2.savefig('./results/f1_compared.png')
 
-
 def start_cold_start_evaluation_with_multithreading():
     plot_3 = plt.figure()
     cs_plot = plot_3.add_subplot(111)
@@ -99,7 +111,8 @@ def start_cold_start_evaluation_with_multithreading():
     threads = [threading.Thread(target=evaluation.evaluate_cold_start, args=(random_artist_recommender, UAM, cs_plot, 'r')),
         threading.Thread(target=evaluation.evaluate_cold_start, args=(random_user_recommender, UAM, cs_plot, 'g')),
         threading.Thread(target=evaluation.evaluate_cold_start, args=(popularity_recommender, UAM, cs_plot, 'b')),
-        threading.Thread(target=evaluation.evaluate_cold_start, args=(collaborative_filtering_recommender, UAM, cs_plot, 'y'))
+        threading.Thread(target=evaluation.evaluate_cold_start, args=(collaborative_filtering_recommender, UAM, cs_plot, 'y')),
+        threading.Thread(target=evaluation.evaluate_cold_start, args=(content_based_recommender, UAM, cs_plot, 'y'))
     ]
 
     for thread in threads:
@@ -109,9 +122,6 @@ def start_cold_start_evaluation_with_multithreading():
         thread.join()
 
     plot_3.savefig('./results/f1_listenings.png')
-
-def content_based_recommender(user, K):
-    return random_user_recommender(100)
 
 if len(sys.argv) < 2: print "no arguments set"
 elif sys.argv[1] == "cb": evaluation.evaluate(content_based_recommender, UAM, None, None, 'y'),
