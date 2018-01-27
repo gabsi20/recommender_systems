@@ -46,22 +46,22 @@ def get_nonzero_artists_from_users(users_playcounts):
     return np.unique(artist_pool)
 
 def collaborative_filtering_recommender(UAM, user, K):
-    pc_vec = UAM[user, :]
+    pc_vec = UAM[user,:]
     sim_users = np.zeros(shape=(UAM.shape[0]), dtype=np.float32)
     for user_index in range(0, UAM.shape[0]):
         sim_users[user_index] = 1.0 - scidist.cosine(pc_vec, UAM[user_index,:])
     sort_idx = np.argsort(sim_users)
     neighbours_idx = sort_idx[-1-K:-1]
     counter = {}
-    for idx, neighbour in enumerate(neighbours_idx):
-        artist_idx_u = np.nonzero(UAM[user, :])
-        artist_idx_n = np.nonzero(UAM[neighbour, :])
+    for neighbour in neighbours_idx:
+        artist_idx_u = np.nonzero(pc_vec)
+        artist_idx_n = np.nonzero(UAM[neighbour,:])
         recommended_artists_idx = np.setdiff1d(artist_idx_n[0], artist_idx_u[0])
         for artist_idx in recommended_artists_idx:
             if artist_idx in counter:
-                counter[artist_idx] += UAM[neighbour, artist_idx] * (len(neighbours_idx) - idx)
+                counter[artist_idx] += UAM[neighbour, artist_idx] * np.take(sim_users,neighbour)
             else:
-                counter[artist_idx] = UAM[neighbour, artist_idx] * (len(neighbours_idx) - idx)
+                counter[artist_idx] = UAM[neighbour, artist_idx] * np.take(sim_users,neighbour)
     return sorted(counter, key=counter.get, reverse=True)
 
 def content_based_recommender(UAM, user, K):
@@ -75,6 +75,12 @@ def content_based_recommender(UAM, user, K):
       neighbor_idx.remove(idx)
 
   return neighbor_idx
+
+def hybrid_CB_CF_recommender(UAM, user, K):
+  CB = content_based_recommender(UAM, user, K)
+  CF = collaborative_filtering_recommender(UAM, user, K)[0:len(CB)]
+
+  return np.union1d(CB,CF)
 
 def evaluate(method, color="r"):
     MAX_RECOMMENDATIONS = 100
@@ -132,7 +138,8 @@ evaluate(random_artist_recommender, 'r')
 evaluate(random_user_recommender, 'g')
 evaluate(popularity_recommender, 'b')
 evaluate(collaborative_filtering_recommender, 'y')
-evaluate(content_based_recommender, 'r')
+evaluate(content_based_recommender, 'c')
+evaluate(hybrid_CB_CF_recommender, 'm')
 
 plot1.savefig('./results/pr_compared.png')
 plot2.savefig('./results/f1_compared.png')
