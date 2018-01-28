@@ -69,7 +69,10 @@ def hybrid_CF_PO_recommender(UAM, user, K):
     cb_artists = collaborative_filtering_recommender(UAM, user, K)
     po_artists = popularity_recommender(UAM, user, K)
 
-    return np.intersect1d(cb_artists, po_artists)
+    canditates = np.union1d(cb_artists, po_artists)
+    return sorted([sum([len(listing) - np.where(listing == canditate)[0] - 1 for
+                        listing in [cb_artists, po_artists] if canditate in listing], 0)
+                   for canditate in canditates], reverse=True)
 
 def content_based_recommender(UAM, user, K):
     count_artists = min(len(np.nonzero(UAM[user,:])[0]),20)
@@ -100,7 +103,7 @@ def start_evaluation_with_multithreading():
         threading.Thread(target=evaluation.evaluate, args=(random_user_recommender, UAM, precion_recall_plot, f1_plot, 'g')),
         threading.Thread(target=evaluation.evaluate, args=(popularity_recommender, UAM, precion_recall_plot, f1_plot, 'b')),
         threading.Thread(target=evaluation.evaluate, args=(collaborative_filtering_recommender, UAM, precion_recall_plot, f1_plot, 'y')),
-        threading.Thread(target=evaluation.evaluate, args=(hybrid_CF_PO_recommender, UAM, precion_recall_plot, f1_plot, 'k')),
+        threading.Thread(target=evaluation.evaluate, args=(hybrid_CF_PO_recommender, UAM, precion_recall_plot, f1_plot, 'c')),
         threading.Thread(target=evaluation.evaluate_cold_start, args=(hybrid_CB_CF_recommender, UAM, precion_recall_plot, f1_plot, 'm')),
         threading.Thread(target=evaluation.evaluate, args=(content_based_recommender, UAM, precion_recall_plot, f1_plot, 'w'))
     ]
@@ -122,9 +125,9 @@ def start_cold_start_evaluation_with_multithreading():
         threading.Thread(target=evaluation.evaluate_cold_start, args=(random_user_recommender, UAM, cs_plot, 'g')),
         threading.Thread(target=evaluation.evaluate_cold_start, args=(popularity_recommender, UAM, cs_plot, 'b')),
         threading.Thread(target=evaluation.evaluate_cold_start, args=(collaborative_filtering_recommender, UAM, cs_plot, 'y')),
-        threading.Thread(target=evaluation.evaluate_cold_start, args=(content_based_recommender, UAM, cs_plot, 'c')),
+        threading.Thread(target=evaluation.evaluate_cold_start, args=(content_based_recommender, UAM, cs_plot, 'w')),
         threading.Thread(target=evaluation.evaluate_cold_start, args=(hybrid_CB_CF_recommender, UAM, cs_plot, 'm')),
-        threading.Thread(target=evaluation.evaluate_cold_start, args=(hybrid_CF_PO_recommender, UAM, cs_plot, 'k'))
+        threading.Thread(target=evaluation.evaluate_cold_start, args=(hybrid_CF_PO_recommender, UAM, cs_plot, 'c'))
     ]
 
     for thread in threads:

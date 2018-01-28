@@ -15,13 +15,15 @@ def evaluate_cold_start(method, UAM, plot, color):
     users_f_measures = []
     users_listenings = []
 
+    user_presicion = 0
+    user_recall = 0
+    count = 0
+    maximum = 9999999
+
     for user_index in sorted_indizes:
         user = UAM[user_index]
 
         folds = cross_validation.KFold(len(user), n_folds=FOLDS)
-
-        user_presicion = 0
-        user_recall = 0
 
         for _train_artists, test_artists in folds:
             training_uam = UAM.copy()
@@ -38,15 +40,27 @@ def evaluate_cold_start(method, UAM, plot, color):
             user_presicion += precision / FOLDS
             user_recall += recall  / FOLDS
 
-        user_f_measure = 2 * ((user_presicion * user_recall) / (user_presicion + user_recall)) if (user_presicion + user_recall) else 0.00
-        user_listenings = users_sums[user_index]
+        count += 1
 
-        users_f_measures.append(user_f_measure)
-        users_listenings.append(user_listenings)
+        if maximum - users_sums[user_index] > 1000:
+            user_presicion = user_presicion / count
+            user_recall = user_recall / count
 
-        print ("\n\nListening Count for User: %.2f\nF-Measure for User %.2f" % (user_listenings, user_f_measure))
+            user_f_measure = 2 * ((user_presicion * user_recall) / (user_presicion + user_recall)) if (user_presicion + user_recall) else 0.00
+            user_listenings = users_sums[user_index]
 
-    plot.plot(users_listenings, users_f_measures, color) 
+            users_f_measures.append(user_f_measure)
+            users_listenings.append(user_listenings)
+
+            count = 0
+            user_presicion = 0
+            user_recall = 0
+            maximum = users_sums[user_index]
+
+            print ("\n\nListening Count for User: %.2f\nF-Measure for User %.2f" % (user_listenings, user_f_measure))
+
+    plot.scatter(users_listenings, users_f_measures, c=color)
+    plt.scatter
 
 def evaluate(method, UAM, precion_recall_plot, f1_plot, color):
     MAX_RECOMMENDATIONS = int(UAM.shape[1] / FOLDS)
