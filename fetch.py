@@ -1,5 +1,6 @@
 import os
 import csv
+import sys
 import file
 import progress
 import requests
@@ -201,10 +202,17 @@ def get_artists_context(fetch, calculate):
         artists_data = map(lambda x: np.array(np.array(x)[12:]), artists_data)
         all_genres = __get_all_genres(artists_data)
         tfidf = __compute_tfidf(artists_data, all_genres)
-        __compute_genre_similarity_tfidf(tfidf, artist_names)
-        # __compute_genre_similarity(artists_data, all_genres, artist_names)
+        # __compute_genre_similarity_tfidf(tfidf, artist_names)
+        __compute_genre_similarity(artists_data, all_genres, artist_names)
         #__compute_audio_feature_similarity(artists_data)
     print 'finished'
 
 if __name__ == '__main__':
-    get_artists_context(fetch=False, calculate=True)
+    fetch = False
+    calculate = False
+    if 'fetch' in sys.argv:
+        fetch = True
+    if 'calc' in sys.argv:
+        calculate = True
+    
+    get_artists_context(fetch=fetch, calculate=calculate)

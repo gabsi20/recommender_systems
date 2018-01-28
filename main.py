@@ -147,16 +147,17 @@ def start_cold_start_evaluation_with_multithreading():
 
     plot_3.savefig('./results/f1_listenings.png')
 
-if len(sys.argv) < 2: print "no arguments set"
+if __name__ == '__main__':
+    if len(sys.argv) < 2: print "no arguments set"
 
-elif sys.argv[1] == "cb": evaluation.evaluate(content_based_recommender, UAM, None, None, 'w'),
-elif sys.argv[1] == "cf": evaluation.evaluate(collaborative_filtering_recommender, UAM, None, None, 'y'),
-elif sys.argv[1] == "cb": evaluation.evaluate(content_based_recommender, UAM, None, None, 'c'),
-elif sys.argv[1] == "ra": evaluation.evaluate(hybrid_CB_CF_recommender, UAM, None, None, 'm'),
-elif sys.argv[1] == "po": evaluation.evaluate(popularity_recommender, UAM, None, None, 'b'),
-elif sys.argv[1] == "ru": evaluation.evaluate(random_user_recommender, UAM, None, None, 'g'),
-elif sys.argv[1] == "ra": evaluation.evaluate(random_artist_recommender, UAM, None, None, 'r'),
-elif sys.argv[1] == "cp": evaluation.evaluate(hybrid_CF_PO_recommender, UAM, None, None, 'k'),
-elif sys.argv[1] == "ev": start_evaluation_with_multithreading(),
-elif sys.argv[1] == "cs": start_cold_start_evaluation_with_multithreading()
-print "Done."
+    elif sys.argv[1] == "cb": evaluation.evaluate(content_based_recommender, UAM, None, None, 'w'),
+    elif sys.argv[1] == "cf": evaluation.evaluate(collaborative_filtering_recommender, UAM, None, None, 'y'),
+    elif sys.argv[1] == "cb": evaluation.evaluate(content_based_recommender, UAM, None, None, 'c'),
+    elif sys.argv[1] == "ra": evaluation.evaluate(hybrid_CB_CF_recommender, UAM, None, None, 'm'),
+    elif sys.argv[1] == "po": evaluation.evaluate(popularity_recommender, UAM, None, None, 'b'),
+    elif sys.argv[1] == "ru": evaluation.evaluate(random_user_recommender, UAM, None, None, 'g'),
+    elif sys.argv[1] == "ra": evaluation.evaluate(random_artist_recommender, UAM, None, None, 'r'),
+    elif sys.argv[1] == "cp": evaluation.evaluate(hybrid_CF_PO_recommender, UAM, None, None, 'k'),
+    elif sys.argv[1] == "ev": start_evaluation_with_multithreading(),
+    elif sys.argv[1] == "cs": start_cold_start_evaluation_with_multithreading()
+    print "Done."
