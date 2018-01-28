@@ -103,13 +103,19 @@ def start_evaluation_with_multithreading():
     precion_recall_plot = plot_1.add_subplot(111)
     f1_plot = plot_2.add_subplot(111)
 
+    precion_recall_plot.set_xlabel('Recall')
+    precion_recall_plot.set_ylabel('Precision')
+
+    f1_plot.set_xlabel('Recommendation Count')
+    f1_plot.set_ylabel('F1-Score')
+
     threads = [threading.Thread(target=evaluation.evaluate, args=(random_artist_recommender, UAM, precion_recall_plot, f1_plot, 'r')),
         threading.Thread(target=evaluation.evaluate, args=(random_user_recommender, UAM, precion_recall_plot, f1_plot, 'g')),
         threading.Thread(target=evaluation.evaluate, args=(popularity_recommender, UAM, precion_recall_plot, f1_plot, 'b')),
         threading.Thread(target=evaluation.evaluate, args=(collaborative_filtering_recommender, UAM, precion_recall_plot, f1_plot, 'y')),
         threading.Thread(target=evaluation.evaluate, args=(hybrid_CF_PO_recommender, UAM, precion_recall_plot, f1_plot, 'c')),
-        threading.Thread(target=evaluation.evaluate_cold_start, args=(hybrid_CB_CF_recommender, UAM, precion_recall_plot, f1_plot, 'm')),
-        threading.Thread(target=evaluation.evaluate, args=(content_based_recommender, UAM, precion_recall_plot, f1_plot, 'w'))
+        threading.Thread(target=evaluation.evaluate, args=(hybrid_CB_CF_recommender, UAM, precion_recall_plot, f1_plot, 'm')),
+        threading.Thread(target=evaluation.evaluate, args=(content_based_recommender, UAM, precion_recall_plot, f1_plot, 'orange'))
     ]
 
     for thread in threads:
@@ -129,10 +135,9 @@ def start_cold_start_evaluation_with_multithreading():
         threading.Thread(target=evaluation.evaluate_cold_start, args=(random_user_recommender, UAM, cs_plot, 'g')),
         threading.Thread(target=evaluation.evaluate_cold_start, args=(popularity_recommender, UAM, cs_plot, 'b')),
         threading.Thread(target=evaluation.evaluate_cold_start, args=(collaborative_filtering_recommender, UAM, cs_plot, 'y')),
-        threading.Thread(target=evaluation.evaluate_cold_start, args=(content_based_recommender, UAM, cs_plot, 'w')),
+        threading.Thread(target=evaluation.evaluate_cold_start, args=(content_based_recommender, UAM, cs_plot, 'orange')),
         threading.Thread(target=evaluation.evaluate_cold_start, args=(hybrid_CB_CF_recommender, UAM, cs_plot, 'm')),
-        threading.Thread(target=evaluation.evaluate_cold_start, args=(hybrid_CF_PO_recommender, UAM, cs_plot, 'c'))
-    ]
+        threading.Thread(target=evaluation.evaluate_cold_start, args=(hybrid_CF_PO_recommender, UAM, cs_plot, 'c'))]
 
     for thread in threads:
         thread.start()
