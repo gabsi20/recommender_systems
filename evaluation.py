@@ -22,7 +22,7 @@ def evaluate_cold_start(method, UAM, plot, color):
     maximum = 9999999
 
     for user_index in sorted_indizes:
-        user = UAM[user_index]
+        user = UAM[user_index:]
 
         folds = cross_validation.KFold(len(user), n_folds=FOLDS)
 
@@ -31,7 +31,7 @@ def evaluate_cold_start(method, UAM, plot, color):
             training_uam[user_index, test_artists] = 0.0
 
             result_indizes = method(training_uam, user_index, 10)[0:RECOMMENDATIONS]
-            correct_indizes = np.intersect1d(user, result_indizes)
+            correct_indizes = np.intersect1d(user[test_artists], result_indizes)
 
             true_positives = len(correct_indizes)
 
@@ -39,7 +39,7 @@ def evaluate_cold_start(method, UAM, plot, color):
             recall = 100.0 if len(test_artists) == 0 else 100.0 * true_positives / len(test_artists)
 
             user_presicion += precision / FOLDS
-            user_recall += recall  / FOLDS
+            user_recall += recall / FOLDS
 
         count += 1
 
@@ -67,7 +67,7 @@ def evaluate_cold_start(method, UAM, plot, color):
     plt.scatter
 
 def evaluate(method, UAM, precion_recall_plot, f1_plot, color):
-    MAX_RECOMMENDATIONS = int(UAM.shape[1] / FOLDS)
+    MAX_RECOMMENDATIONS = 30
     MAX_USERS = 5
 
     sample_users = random.sample(range(0, UAM.shape[0]), MAX_USERS)
@@ -77,28 +77,28 @@ def evaluate(method, UAM, precion_recall_plot, f1_plot, color):
     f_measures = []
     counts = []
 
-    for recommendations_count in range(1, MAX_RECOMMENDATIONS, 15):
+    for recommendations_count in range(1, MAX_RECOMMENDATIONS, 2):
         avg_precision = 0
         avg_recall = 0
 
         for user_index in sample_users:
-            user = UAM[user_index]
+            user = UAM[user_index: ]
             folds = cross_validation.KFold(len(user), n_folds=FOLDS)
 
             for _train_artists, test_artists in folds:
                 training_uam = UAM.copy()
                 training_uam[user_index, test_artists] = 0.0
 
-                result_indizes = method(training_uam, user_index, 100)[0:recommendations_count]
-                correct_indizes = np.intersect1d(user, result_indizes)
+                result_indizes = method(training_uam, user_index, 20)[0:recommendations_count]
+                correct_indizes = np.intersect1d(user[test_artists], result_indizes)
 
                 true_positives = len(correct_indizes)
 
                 precision = 100.0 if len(result_indizes) == 0 else 100.0 * true_positives / len(result_indizes)
                 recall = 100.0 if len(test_artists) == 0 else 100.0 * true_positives / len(test_artists)
 
-                avg_precision += precision / (FOLDS * MAX_USERS)
-                avg_recall += recall  / (FOLDS * MAX_USERS)
+                avg_precision += precision / (FOLDS * len(sample_users))
+                avg_recall += recall  / (FOLDS * len(sample_users))
 
         f_measure = 2 * ((avg_precision * avg_recall) / (avg_precision + avg_recall)) if (avg_precision + avg_recall) else 0.00
 
