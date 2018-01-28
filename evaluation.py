@@ -3,6 +3,7 @@ import numpy as np
 import random
 import matplotlib.pyplot as plt
 import time
+import matplotlib.patches as mpatches
 
 FOLDS = 10
 
@@ -59,12 +60,15 @@ def evaluate_cold_start(method, UAM, plot, color):
 
             print ("\n\nListening Count for User: %.2f\nF-Measure for User %.2f" % (user_listenings, user_f_measure))
 
+    patch = mpatches.Patch(color=color, label=method.__name__)
+    plt.legend(handles=[patch])
+
     plot.scatter(users_listenings, users_f_measures, c=color)
     plt.scatter
 
 def evaluate(method, UAM, precion_recall_plot, f1_plot, color):
     MAX_RECOMMENDATIONS = int(UAM.shape[1] / FOLDS)
-    MAX_USERS = 10
+    MAX_USERS = 5
 
     sample_users = random.sample(range(0, UAM.shape[0]), MAX_USERS)
 

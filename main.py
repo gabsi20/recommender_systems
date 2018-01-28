@@ -66,13 +66,17 @@ def collaborative_filtering_recommender(UAM, user, K):
 
 
 def hybrid_CF_PO_recommender(UAM, user, K):
-    cb_artists = collaborative_filtering_recommender(UAM, user, K)
+    cf_artists = collaborative_filtering_recommender(UAM, user, K)
     po_artists = popularity_recommender(UAM, user, K)
 
-    canditates = np.union1d(cb_artists, po_artists)
-    return sorted([sum([len(listing) - np.where(listing == canditate)[0] - 1 for
-                        listing in [cb_artists, po_artists] if canditate in listing], 0)
-                   for canditate in canditates], reverse=True)
+    h = {}
+    for index_a, canditate in enumerate(cf_artists):
+        index_b = np.where(po_artists == canditate)[0]
+
+        index_b = index_b[0] if len(index_b) > 0 else len(cf_artists)
+
+        h[canditate] = index_a+index_b
+    return sorted(h, key = h.get)
 
 def content_based_recommender(UAM, user, K):
     count_artists = min(len(np.nonzero(UAM[user,:])[0]),20)
