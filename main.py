@@ -69,14 +69,7 @@ def hybrid_CF_PO_recommender(UAM, user, K):
     cf_artists = collaborative_filtering_recommender(UAM, user, K)
     po_artists = popularity_recommender(UAM, user, K)
 
-    h = {}
-    for index_a, canditate in enumerate(cf_artists):
-        index_b = np.where(po_artists == canditate)[0]
-
-        index_b = index_b[0] if len(index_b) > 0 else len(cf_artists)
-
-        h[canditate] = index_a+index_b
-    return sorted(h, key = h.get)
+    return borda_rank(cf_artists, po_artists)
 
 def content_based_recommender(UAM, user, K):
     count_artists = min(len(np.nonzero(UAM[user,:])[0]),20)
@@ -92,9 +85,19 @@ def content_based_recommender(UAM, user, K):
 
 def hybrid_CB_CF_recommender(UAM, user, K):
     CB = content_based_recommender(UAM, user, K)
-    CF = collaborative_filtering_recommender(UAM, user, K)[0:len(CB)]
+    CF = collaborative_filtering_recommender(UAM, user, K)
 
-    return np.union1d(CB,CF)
+    return borda_rank(CF, CB)
+
+def borda_rank(A, B):
+    h = {}
+    for index_a, canditate in enumerate(A):
+        index_b = np.where(B == canditate)[0]
+
+        index_b = index_b[0] if len(index_b) > 0 else len(A)
+
+        h[canditate] = index_a+index_b
+    return sorted(h, key = h.get)
 
 def start_evaluation_with_multithreading():
     plot_1 = plt.figure()
@@ -150,10 +153,9 @@ def start_cold_start_evaluation_with_multithreading():
 if __name__ == '__main__':
     if len(sys.argv) < 2: print "no arguments set"
 
-    elif sys.argv[1] == "cb": evaluation.evaluate(content_based_recommender, UAM, None, None, 'w'),
+    elif sys.argv[1] == "cb": evaluation.evaluate(content_based_recommender, UAM, None, None, 'o'),
     elif sys.argv[1] == "cf": evaluation.evaluate(collaborative_filtering_recommender, UAM, None, None, 'y'),
-    elif sys.argv[1] == "cb": evaluation.evaluate(content_based_recommender, UAM, None, None, 'c'),
-    elif sys.argv[1] == "ra": evaluation.evaluate(hybrid_CB_CF_recommender, UAM, None, None, 'm'),
+    elif sys.argv[1] == "bf": evaluation.evaluate(hybrid_CB_CF_recommender, UAM, None, None, 'm'),
     elif sys.argv[1] == "po": evaluation.evaluate(popularity_recommender, UAM, None, None, 'b'),
     elif sys.argv[1] == "ru": evaluation.evaluate(random_user_recommender, UAM, None, None, 'g'),
     elif sys.argv[1] == "ra": evaluation.evaluate(random_artist_recommender, UAM, None, None, 'r'),
