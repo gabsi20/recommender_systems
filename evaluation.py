@@ -8,7 +8,7 @@ import matplotlib.patches as mpatches
 FOLDS = 10
 
 def evaluate_cold_start(method, UAM, plot, color):
-    RECOMMENDATIONS = 30
+    RECOMMENDATIONS = 100
 
     users_sums = np.sum(UAM, axis=1)
     sorted_indizes = np.argsort(users_sums)[::-1]
@@ -67,7 +67,7 @@ def evaluate_cold_start(method, UAM, plot, color):
     plt.scatter
 
 def evaluate(method, UAM, precion_recall_plot, f1_plot, color):
-    MAX_RECOMMENDATIONS = 30
+    MAX_RECOMMENDATIONS = 100
     MAX_USERS = 5
 
     sample_users = random.sample(range(0, UAM.shape[0]), MAX_USERS)
@@ -77,7 +77,7 @@ def evaluate(method, UAM, precion_recall_plot, f1_plot, color):
     f_measures = []
     counts = []
 
-    for recommendations_count in range(1, MAX_RECOMMENDATIONS, 2):
+    for recommendations_count in range(1, MAX_RECOMMENDATIONS, 5):
         avg_precision = 0
         avg_recall = 0
 
